@@ -1,0 +1,18 @@
+2026-04-07 09:19:32.740 | INFO     | __main__:<module>:98 - 🚀 启动自动化深海雷达，正在连接 Binance...
+2026-04-07 09:19:36.950 | INFO     | __main__:<module>:112 - 🎯 锁定 431 个山寨币，雷达多线程扫描中...
+2026-04-07 09:19:38.277 | WARNING  | __main__:<module>:120 - 🚨 捕获巨鲸: XLM/USDT | 异动: 3.45x
+2026-04-07 09:19:42.952 | WARNING  | __main__:<module>:120 - 🚨 捕获巨鲸: KAVA/USDT | 异动: 3.63x
+2026-04-07 09:19:42.952 | WARNING  | __main__:<module>:120 - 🚨 捕获巨鲸: AVA/USDT | 异动: 3.09x
+2026-04-07 09:19:42.953 | WARNING  | __main__:<module>:120 - 🚨 捕获巨鲸: GRT/USDT | 异动: 4.82x
+2026-04-07 09:19:57.924 | WARNING  | __main__:<module>:120 - 🚨 捕获巨鲸: GPS/USDT | 异动: 3.0x
+2026-04-07 09:19:57.925 | WARNING  | __main__:<module>:120 - 🚨 捕获巨鲸: GUN/USDT | 异动: 4.91x
+2026-04-07 09:19:59.447 | SUCCESS  | __main__:send_telegram_message:88 - ✅ 巨鲸警报已成功推送到 Telegram！
+2026-04-07 09:23:49.198 | INFO     | __main__:<module>:98 - 🚀 启动自动化深海雷达，正在连接 Binance...
+2026-04-07 09:23:51.579 | INFO     | __main__:<module>:112 - 🎯 锁定 431 个山寨币，雷达多线程扫描中...
+2026-04-07 09:23:52.138 | WARNING  | __main__:<module>:120 - 🚨 捕获巨鲸: XLM/USDT | 异动: 3.45x
+2026-04-07 09:23:53.042 | WARNING  | __main__:<module>:120 - 🚨 捕获巨鲸: KAVA/USDT | 异动: 3.63x
+2026-04-07 09:23:54.440 | WARNING  | __main__:<module>:120 - 🚨 捕获巨鲸: AVA/USDT | 异动: 3.09x
+2026-04-07 09:23:54.485 | WARNING  | __main__:<module>:120 - 🚨 捕获巨鲸: GRT/USDT | 异动: 4.82x
+2026-04-07 09:23:59.873 | WARNING  | __main__:<module>:120 - 🚨 捕获巨鲸: GPS/USDT | 异动: 3.0x
+2026-04-07 09:24:00.238 | WARNING  | __main__:<module>:120 - 🚨 捕获巨鲸: GUN/USDT | 异动: 4.91x
+2026-04-07 09:24:03.433 | SUCCESS  | __main__:send_telegram_message:88 - ✅ 巨鲸警报已成功推送到 Telegram！

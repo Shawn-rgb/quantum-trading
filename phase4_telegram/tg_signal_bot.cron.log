@@ -1,0 +1,10 @@
+===== 2026-05-15T09:38:58+08:00 START tg_signal_bot (host=YUHAO, user=administrator) =====
+2026-05-15 09:39:01.460 | INFO     | __main__:<module>:119 - 网络代理: http://127.0.0.1:6478（可设 CRYPTO_PROXY_URL / CRYPTO_PROXY_PORT 覆盖）
+2026-05-15 09:39:01.461 | INFO     | __main__:<module>:137 - 📡 正在扫描全球市场并生成 V8 信号...
+2026-05-15 09:39:05.956 | SUCCESS  | __main__:send_telegram_message:102 - ✅ 信号已成功推送到 Telegram！
+===== 2026-05-15T09:39:06+08:00 END exit=0 =====
+===== 2026-05-17T09:37:53+08:00 START tg_signal_bot (host=YUHAO, user=administrator) =====
+2026-05-17 09:38:06.663 | INFO     | __main__:<module>:119 - 网络代理: http://127.0.0.1:6478（可设 CRYPTO_PROXY_URL / CRYPTO_PROXY_PORT 覆盖）
+2026-05-17 09:38:06.663 | INFO     | __main__:<module>:137 - 📡 正在扫描全球市场并生成 V8 信号...
+2026-05-17 09:38:09.513 | SUCCESS  | __main__:send_telegram_message:102 - ✅ 信号已成功推送到 Telegram！
+===== 2026-05-17T09:38:09+08:00 END exit=0 =====
