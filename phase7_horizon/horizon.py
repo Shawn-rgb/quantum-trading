@@ -3,7 +3,11 @@
 策略：金叉买入，死叉卖出（仅做多）
 """
 
+import os
+import sys
 import time
+import warnings
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -13,7 +17,21 @@ import yfinance as yf
 from loguru import logger
 from plotly.subplots import make_subplots
 
+_SCRIPT_ROOT = Path(__file__).resolve().parents[1]
+if str(_SCRIPT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_SCRIPT_ROOT))
+
+from phase5_crypto.proxy_config import (
+    BinanceConnectivityError,
+    default_proxy_base_url,
+    no_proxy_enforced,
+    proxies_dict,
+)
+
+warnings.filterwarnings("ignore")
+
 SYMBOL = "9660.HK"
+CACHE_FILE = "horizon_9660_daily.csv"
 FAST_WINDOW = 20
 SLOW_WINDOW = 50
 TRADING_DAYS = 252
@@ -23,21 +41,100 @@ FRICTION = FEE_RATE + SLIPPAGE
 RF_RATE = 0.03
 
 
+def _is_wsl() -> bool:
+    try:
+        with open("/proc/version", encoding="utf-8", errors="ignore") as f:
+            return "microsoft" in f.read().lower()
+    except OSError:
+        return False
+
+
+def _should_open_plot() -> bool:
+    """WSL / 无图形环境时不弹窗，避免 gio: Operation not supported。"""
+    if os.environ.get("HORIZON_SHOW_PLOT", "").lower() in ("1", "true", "yes"):
+        return True
+    if os.environ.get("HORIZON_SHOW_PLOT", "").lower() in ("0", "false", "no"):
+        return False
+    return bool(os.environ.get("DISPLAY")) and not _is_wsl()
+
+
+def _without_proxy():
+    """东方财富等国内源走直连，经 HTTP 代理易失败。"""
+    keys = ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy", "ALL_PROXY", "all_proxy")
+    saved = {k: os.environ.pop(k, None) for k in keys}
+    return saved
+
+
+def _restore_proxy(saved: dict[str, str | None]) -> None:
+    for k, v in saved.items():
+        if v is not None:
+            os.environ[k] = v
+
+
+def _normalize_ohlcv(raw: pd.DataFrame) -> pd.DataFrame:
+    """统一 OHLCV 列类型。"""
+    out = raw.copy()
+    out["date"] = pd.to_datetime(out["date"], utc=True).dt.tz_localize(None)
+    for col in ("Open", "High", "Low", "Close", "Volume"):
+        if col in out.columns:
+            out[col] = pd.to_numeric(out[col], errors="coerce").astype("float64")
+    keep = ["date"] + [c for c in ("Open", "High", "Low", "Close", "Volume") if c in out.columns]
+    return out[keep]
+
+
+def _pandas_to_polars(raw: pd.DataFrame) -> pl.DataFrame:
+    """从 pandas 构建 polars，不依赖 pyarrow。"""
+    raw = _normalize_ohlcv(raw)
+    cols: dict[str, list] = {"date": raw["date"].dt.date.astype(str).tolist()}
+    for col in ("Open", "High", "Low", "Close", "Volume"):
+        if col in raw.columns:
+            cols[col] = raw[col].to_numpy(dtype=np.float64).tolist()
+    return pl.DataFrame(cols).with_columns(pl.col("date").str.to_date())
+
+
+def setup_network_proxy() -> None:
+    """
+    与 phase4_telegram/tg_signal_bot.py 一致：
+    yfinance 走 HTTP(S)_PROXY；akshare/requests 同样读取环境变量。
+    """
+    try:
+        proxy_for_requests = proxies_dict()
+    except BinanceConnectivityError as err:
+        logger.error("{}", err)
+        raise SystemExit(1) from err
+
+    if proxy_for_requests:
+        logger.info(
+            "网络代理: {}（可设 CRYPTO_PROXY_URL / CRYPTO_PROXY_PORT 覆盖）",
+            default_proxy_base_url(),
+        )
+        os.environ["HTTP_PROXY"] = proxy_for_requests["http"]
+        os.environ["HTTPS_PROXY"] = proxy_for_requests["https"]
+    elif no_proxy_enforced():
+        logger.info("网络: 直连（已设置 CRYPTO_NO_PROXY）")
+    else:
+        logger.info("网络: 直连（当前环境可直接访问外网，未使用代理）")
+
+
 def _download_akshare(hk_code: str = "09660") -> pd.DataFrame:
-    """通过 akshare 拉取港股前复权日线（数据源更稳定）。"""
+    """通过 akshare 拉取港股前复权日线（国内源，临时关闭代理直连）。"""
     import akshare as ak
 
     last_err = None
-    for attempt in range(5):
-        try:
-            raw = ak.stock_hk_hist(symbol=hk_code, period="daily", adjust="qfq")
-            if not raw.empty:
-                break
-        except Exception as e:
-            last_err = e
-            time.sleep(2 ** attempt)
-    else:
-        raise ValueError(f"akshare 未返回 {hk_code} 数据: {last_err}")
+    saved_proxy = _without_proxy()
+    try:
+        for attempt in range(3):
+            try:
+                raw = ak.stock_hk_hist(symbol=hk_code, period="daily", adjust="qfq")
+                if not raw.empty:
+                    break
+            except Exception as e:
+                last_err = e
+                time.sleep(2**attempt)
+        else:
+            raise ValueError(f"akshare 未返回 {hk_code} 数据: {last_err}")
+    finally:
+        _restore_proxy(saved_proxy)
     return raw.rename(
         columns={
             "日期": "date",
@@ -51,10 +148,11 @@ def _download_akshare(hk_code: str = "09660") -> pd.DataFrame:
 
 
 def _download_yfinance(symbol: str) -> pd.DataFrame:
-    """带重试的 yfinance 日线下载（备用）。"""
+    """带重试的 yfinance 日线下载（备用）。代理依赖 HTTP(S)_PROXY，勿传 requests.Session。"""
     last_err = None
     for attempt in range(4):
         try:
+            # yfinance 新版使用 curl_cffi，经 setup_network_proxy 写入的环境变量走代理
             raw = yf.download(
                 symbol, period="max", interval="1d", progress=False, threads=False
             )
@@ -71,33 +169,73 @@ def _download_yfinance(symbol: str) -> pd.DataFrame:
     raise ValueError(f"yfinance 未获取到 {symbol}: {last_err}")
 
 
+def _load_cache() -> pd.DataFrame | None:
+    from pathlib import Path
+
+    path = Path(__file__).parent / CACHE_FILE
+    if path.exists():
+        logger.info(f"从本地缓存加载: {path.name}")
+        return pd.read_csv(path, parse_dates=["date"])
+    return None
+
+
+def _save_cache(raw: pd.DataFrame) -> None:
+    from pathlib import Path
+
+    path = Path(__file__).parent / CACHE_FILE
+    raw.to_csv(path, index=False)
+    logger.info(f"日线已缓存至 {path.name}")
+
+
 def fetch_daily_history(symbol: str = SYMBOL) -> pl.DataFrame:
-    """拉取港股全部可用日线数据。优先 akshare，失败则回退 yfinance。"""
-    hk_code = symbol.replace(".HK", "").lstrip("0") or "0"
-    hk_code = hk_code.zfill(5) if len(hk_code) <= 5 else hk_code
+    """拉取港股全部可用日线数据。有缓存且未强制刷新时优先读缓存。"""
+    hk_code = symbol.replace(".HK", "").zfill(5)
+    cache_path = Path(__file__).parent / CACHE_FILE
+    force_refresh = os.environ.get("HORIZON_REFRESH", "").lower() in ("1", "true", "yes")
+
+    if cache_path.exists() and not force_refresh:
+        raw = _load_cache()
+        if raw is not None:
+            df = _pandas_to_polars(raw).sort("date").drop_nulls(subset=["Close"])
+            logger.success(
+                f"[cache] 共 {len(df)} 个交易日，{df['date'][0]} ~ {df['date'][-1]}"
+                "（设 HORIZON_REFRESH=1 强制联网更新）"
+            )
+            return df
 
     logger.info(f"正在拉取 {symbol} (代码 {hk_code}) 全部日线...")
+    raw = None
+    source = ""
+
     try:
         raw = _download_akshare(hk_code)
         source = "akshare"
     except Exception as e:
         logger.warning(f"akshare 失败 ({e})，尝试 yfinance...")
-        raw = _download_yfinance(symbol)
-        source = "yfinance"
-        if isinstance(raw.columns, pd.MultiIndex):
-            raw.columns = [col[0] for col in raw.columns]
-        date_col = "Date" if "Date" in raw.columns else raw.columns[0]
-        raw = raw.rename(columns={date_col: "date"})
+        try:
+            raw = _download_yfinance(symbol)
+            source = "yfinance"
+            if isinstance(raw.columns, pd.MultiIndex):
+                raw.columns = [col[0] for col in raw.columns]
+            date_col = "Date" if "Date" in raw.columns else raw.columns[0]
+            raw = raw.rename(columns={date_col: "date"})
+        except Exception as e2:
+            logger.warning(f"yfinance 失败 ({e2})，尝试本地缓存...")
+            raw = _load_cache()
+            source = "cache"
+            if raw is None:
+                raise ValueError(
+                    f"所有数据源均失败。请稍后重试，或手动运行一次以生成 {CACHE_FILE}"
+                ) from e2
 
     if "date" not in raw.columns:
         date_col = "Date" if "Date" in raw.columns else raw.columns[0]
         raw = raw.rename(columns={date_col: "date"})
 
-    df = (
-        pl.from_pandas(raw)
-        .sort("date")
-        .drop_nulls(subset=["Close"])
-    )
+    if source != "cache":
+        _save_cache(raw)
+
+    df = _pandas_to_polars(raw).sort("date").drop_nulls(subset=["Close"])
     logger.success(
         f"[{source}] 共 {len(df)} 个交易日，{df['date'][0]} ~ {df['date'][-1]}"
     )
@@ -311,17 +449,26 @@ def plot_backtest(pdf: pd.DataFrame) -> None:
         xaxis_rangeslider_visible=False,
         showlegend=True,
     )
-    out_html = "horizon_backtest.html"
-    fig.write_html(out_html)
-    logger.success(f"回测图表已保存: {out_html}")
-    fig.show()
+    out_html = Path(__file__).parent / "horizon_backtest.html"
+    fig.write_html(str(out_html))
+    logger.success("回测图表已保存: {}", out_html.resolve())
+    if _should_open_plot():
+        fig.show()
+    else:
+        logger.info("未弹窗（WSL 常见）。用浏览器打开上述 HTML，或设 HORIZON_SHOW_PLOT=1")
+
+
+def _polars_to_pandas(df: pl.DataFrame) -> pd.DataFrame:
+    """polars -> pandas，不依赖 pyarrow。"""
+    return pd.DataFrame({col: df[col].to_list() for col in df.columns})
 
 
 def run_backtest() -> pd.DataFrame:
+    setup_network_proxy()
     df = fetch_daily_history()
     df = dual_ma_signals(df)
     print_metrics(df)
-    pdf = df.to_pandas()
+    pdf = _polars_to_pandas(df)
     plot_backtest(pdf)
     return pdf
 
