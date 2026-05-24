@@ -14,6 +14,7 @@ _SCRIPT_ROOT = Path(__file__).resolve().parents[1]
 if str(_SCRIPT_ROOT) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_ROOT))
 
+from config.env import get_telegram_credentials, load_project_env
 from phase5_crypto.proxy_config import (
     BinanceConnectivityError,
     default_proxy_base_url,
@@ -23,11 +24,8 @@ from phase5_crypto.proxy_config import (
 
 warnings.filterwarnings('ignore')
 
-# ==========================================
-# ⚙️ 配置区：填入你的 Telegram 密钥
-# ==========================================
-TELEGRAM_TOKEN = "8678238142:AAE0FYicDcaYpwJJ_8jO8Tgu4Sm25IV_oUg"  # 替换为你的 Bot Token
-CHAT_ID = "5768584239"           # 替换为你的 Chat ID
+load_project_env()
+TELEGRAM_TOKEN, CHAT_ID = get_telegram_credentials()
 
 TARGET_VOL = 0.015  # 目标日波动率 (1.5%)
 

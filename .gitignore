@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# 项目配置（含密钥，勿提交）
+config/.env
+
+# 日志与运行时
+*.log
+*.cron.log
+
+# 构建 / 工具缓存
+.tools/
+bazel-*
+/bazel-out/
+/bazel-bin/
+/bazel-testlogs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# 可再生的 demo 输出
+vectorbt_demo/outputs/*
+!vectorbt_demo/outputs/.gitkeep
+
+# 本地敏感说明（BotFather 回复等）
+**/telegram_info.txt
+
+# 数据缓存（体积大、可本地生成）
+*.parquet

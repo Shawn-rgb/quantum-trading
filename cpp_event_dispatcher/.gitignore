@@ -1,0 +1,6 @@
+/bazel-*
+/bazel-out/
+/bazel-bin/
+/bazel-testlogs/
+MODULE.bazel.lock
+.tools/

@@ -1,0 +1,48 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+
+cc_library(
+    name = "event_dispatcher",
+    srcs = ["src/event_dispatcher.cpp"],
+    hdrs = glob([
+        "include/event_dispatcher/**/*.hpp",
+    ]),
+    includes = ["include"],
+    copts = [
+        "-Wall",
+        "-Wextra",
+        "-Wpedantic",
+    ],
+    linkopts = select({
+        "@platforms//os:linux": ["-lpthread"],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "event_dispatcher_tests",
+    srcs = [
+        "tests/test_event_dispatcher.cpp",
+        "tests/test_mpsc_queue.cpp",
+        "tests/test_object_pool.cpp",
+    ],
+    copts = [
+        "-Wall",
+        "-Wextra",
+        "-Wpedantic",
+    ],
+    linkopts = select({
+        "@platforms//os:linux": ["-lpthread"],
+        "//conditions:default": [],
+    }),
+    deps = [
+        ":event_dispatcher",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_binary(
+    name = "tick_publisher",
+    srcs = ["examples/tick_publisher.cpp"],
+    deps = [":event_dispatcher"],
+)
