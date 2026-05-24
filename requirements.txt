@@ -1,4 +1,5 @@
 # 根目录常用依赖；子项目见各自 requirements.txt
+ccxt>=4.0.0
 python-dotenv>=1.0.0
 pandas>=2.0.0
 polars>=0.20.0

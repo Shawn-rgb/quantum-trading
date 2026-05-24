@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+
+# 环境变量
+.env
+.env.*
+!.env.example
+
+# 数据输出（本地生成，不提交）
+data/*
+!data/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# 日志
+*.log

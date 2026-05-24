@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "binance-ohlcv"
+version = "1.0.0"
+description = "Fetch and clean Binance spot OHLCV candlestick data via ccxt"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Shawn-rgb" }]
+dependencies = [
+    "ccxt>=4.0.0",
+    "pandas>=2.0.0",
+    "loguru>=0.7.0",
+    "requests>=2.28.0",
+]
+
+[project.scripts]
+binance-ohlcv = "binance_ohlcv.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
