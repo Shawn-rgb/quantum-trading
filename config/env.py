@@ -34,3 +34,16 @@ def get_telegram_credentials() -> tuple[str, str]:
             "可参考 config/.env.example 复制后填写。"
         )
     return token, chat_id
+
+
+def get_binance_testnet_credentials() -> tuple[str, str]:
+    """Binance Spot Testnet API 密钥（binance-ohlcv-fetcher 实盘执行）。"""
+    load_project_env()
+    api_key = os.getenv("BINANCE_TESTNET_API_KEY", "").strip()
+    api_secret = os.getenv("BINANCE_TESTNET_API_SECRET", "").strip()
+    if not api_key or not api_secret:
+        raise RuntimeError(
+            "请在 config/.env 中设置 BINANCE_TESTNET_API_KEY 与 BINANCE_TESTNET_API_SECRET。"
+            "可参考 config/.env.example；密钥在 https://testnet.binance.vision/ 申请。"
+        )
+    return api_key, api_secret

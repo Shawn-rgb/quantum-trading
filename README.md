@@ -42,7 +42,7 @@ python -m stock.backtest_left_side --ticker 600519 --years 5
 | **stock** | yfinance / akshare 拉取 OHLCV，左侧跌透 + MACD 金叉 + 放量信号，Backtrader 回测 | `python -m stock.backtest_left_side` |
 | **phase4_telegram** | 每日扫描 BTC/QQQ/GLD，波动率缩放仓位，推送 Telegram | `python phase4_telegram/tg_signal_bot.py` |
 | **phase5_crypto** | 山寨币成交量异动雷达；`futures_ws_collector` 写 Redis/ClickHouse | `python phase5_crypto/tg_whale_bot.py` |
-| **binance-ohlcv-fetcher** | Binance 现货 OHLCV 历史 K 线拉取（ccxt，限频/重试/清洗） | `PYTHONPATH=binance-ohlcv-fetcher/src python -m binance_ohlcv` |
+| **binance-ohlcv-fetcher** | BTC 1h K 线拉取、SMA 回测、Testnet 模拟盘下单 | 见 [binance-ohlcv-fetcher/README.md](binance-ohlcv-fetcher/README.md) |
 | **vectorbt_demo** | vectorbt 核心 API 示例，一键跑全部 demo | `python vectorbt_demo/run_all.py` |
 | **cpp_event_dispatcher** | 工业级 Tick 事件队列，Bazel 构建 | `./scripts/bazel.sh test //...` |
 | **ear_training_game** | 音程练耳 + LLM 讲解（可选 Supabase 记录） | `streamlit run ear_training_game/app.py` |
@@ -50,8 +50,8 @@ python -m stock.backtest_left_side --ticker 600519 --years 5
 ## 配置与安全
 
 - **密钥统一放在 `config/.env`**，仓库仅保留 `config/.env.example` 模板。
-- **切勿提交** `.env`、日志、`telegram_info.txt`、Bot Token 等到 Git。
-- 若 Token 曾出现在历史提交中，请在 [@BotFather](https://t.me/BotFather) **重新生成** 并更新本地 `config/.env`。
+- **切勿提交** `.env`、日志、`telegram_info.txt`、Bot Token、API Key 文本文件等到 Git。
+- 若 Token / API Key 曾出现在历史提交或终端截图中，请**立即重新生成**并更新本地 `config/.env`。
 
 ### 环境变量一览
 
@@ -61,6 +61,8 @@ python -m stock.backtest_left_side --ticker 600519 --years 5
 | `TELEGRAM_CHAT_ID` | 推送目标 Chat ID |
 | `OPENAI_API_KEY` | 练耳游戏 LLM 讲解 |
 | `CRYPTO_PROXY_URL` | WSL 访问 Binance / yfinance 代理 |
+| `BINANCE_TESTNET_API_KEY` | Binance Spot Testnet API Key（模拟盘） |
+| `BINANCE_TESTNET_API_SECRET` | Binance Spot Testnet API Secret |
 | `REDIS_URL` / `CH_*` | 合约 WS 采集落盘 |
 
 网络代理逻辑见 `phase5_crypto/proxy_config.py`，各模块复用同一套探测规则。
