@@ -1,3 +1,7 @@
-"""Binance 现货 OHLCV 历史数据拉取工具。"""
+"""
+Binance 现货量化骨架：数据、回测、WebSocket、事件引擎、Testnet 执行、OMS。
 
-__version__ = "1.0.0"
+详见包根目录 README.md。
+"""
+
+__version__ = "1.1.0"

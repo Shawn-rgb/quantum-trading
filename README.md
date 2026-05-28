@@ -28,7 +28,7 @@ python -m stock.backtest_left_side --ticker 600519 --years 5
 ├── phase4_telegram/        # V8 全天候 Telegram 每日信号
 ├── phase5_crypto/          # 币安雷达、合约 WS 采集、巨鲸警报
 ├── phase6_btc/             # BTC 价差分析
-├── binance-ohlcv-fetcher/  # Binance 现货 OHLCV 拉取（ccxt）
+├── binance-ohlcv-fetcher/  # Binance 现货：数据/回测/WS/事件引擎/Testnet/OMS
 ├── phase7_horizon/         # 地平线 9660.HK 专项回测
 ├── vectorbt_demo/          # vectorbt 教程与 demo
 ├── cpp_event_dispatcher/   # C++ MPSC 事件分发器（Bazel）
@@ -42,7 +42,7 @@ python -m stock.backtest_left_side --ticker 600519 --years 5
 | **stock** | yfinance / akshare 拉取 OHLCV，左侧跌透 + MACD 金叉 + 放量信号，Backtrader 回测 | `python -m stock.backtest_left_side` |
 | **phase4_telegram** | 每日扫描 BTC/QQQ/GLD，波动率缩放仓位，推送 Telegram | `python phase4_telegram/tg_signal_bot.py` |
 | **phase5_crypto** | 山寨币成交量异动雷达；`futures_ws_collector` 写 Redis/ClickHouse | `python phase5_crypto/tg_whale_bot.py` |
-| **binance-ohlcv-fetcher** | BTC 1h K 线拉取、SMA 回测、Testnet 模拟盘下单 | 见 [binance-ohlcv-fetcher/README.md](binance-ohlcv-fetcher/README.md) |
+| **binance-ohlcv-fetcher** | Binance 现货量化骨架：K 线、SMA 回测、WS 行情、事件引擎、Testnet、OMS | [使用说明](binance-ohlcv-fetcher/README.md) |
 | **vectorbt_demo** | vectorbt 核心 API 示例，一键跑全部 demo | `python vectorbt_demo/run_all.py` |
 | **cpp_event_dispatcher** | 工业级 Tick 事件队列，Bazel 构建 | `./scripts/bazel.sh test //...` |
 | **ear_training_game** | 音程练耳 + LLM 讲解（可选 Supabase 记录） | `streamlit run ear_training_game/app.py` |

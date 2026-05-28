@@ -4,3 +4,4 @@ loguru>=0.7.0
 requests>=2.28.0
 backtrader>=1.9.78
 matplotlib>=3.7.0
+websockets>=12.0
