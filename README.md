@@ -2,6 +2,8 @@
 
 量化研究与工具集合：从策略探索、回测、Telegram 信号推送，到 C++ 事件分发与练耳小游戏。
 
+**详细工程结构与用法** → [docs/工程说明.md](docs/工程说明.md)
+
 ## 快速开始
 
 ```bash
@@ -21,6 +23,7 @@ python -m stock.backtest_left_side --ticker 600519 --years 5
 ```
 .
 ├── config/                 # 共享配置（.env 本地填写，不提交）
+├── docs/                   # 工程说明文档
 ├── stock/                  # A 股/美股数据 + Backtrader 左侧反转回测
 ├── phase1/                 # 早期探索：动量、相关性、可视化
 ├── phase2/                 # 地平线机器人等专业回测报告
